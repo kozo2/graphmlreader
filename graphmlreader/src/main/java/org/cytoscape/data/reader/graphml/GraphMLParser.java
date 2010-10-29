@@ -7,17 +7,15 @@
 package org.cytoscape.data.reader.graphml;
 
 import cytoscape.Cytoscape;
-import cytoscape.CyNetwork;
 import cytoscape.CyNode;
 import cytoscape.CyEdge;
 import cytoscape.data.CyAttributes;
-import cytoscape.generated.Network;
+import cytoscape.data.Semantics;
 import cytoscape.logger.CyLogger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
 
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
@@ -25,7 +23,7 @@ import org.xml.sax.SAXException;
 
 public class GraphMLParser extends DefaultHandler {
 	
-	private static CyLogger logger = CyLogger.getLogger(GraphMLParser.class);
+//	private static CyLogger logger = CyLogger.getLogger(GraphMLParser.class);
 	
 	private String networkName = null;
 	
@@ -36,16 +34,15 @@ public class GraphMLParser extends DefaultHandler {
 	/* Map of XML ID's to nodes */
 	private HashMap<String,CyNode> nodeidMap = null;
 	
-	/* Map of data type to nodes and edges */
-	private HashMap<String, String> nodeDatatypeMap = null;
-	private HashMap<String, String> edgeDatatypeMap = null; 
+	/* Map of data type to nodes or edges */
+	private HashMap<String, String> datatypeMap = null;
 	
 	private CyNode currentNode = null;
 	private CyEdge currentEdge = null;
 	
 	/* Attribute values */
 	private String currentAttributeID = null;
-	private String currentAttributeName = null;
+	private String currentAttributeKey = null;
 	private String currentAttributeData = null;
 	private String currentAttributeType = null;
 	private String currentEdgeSource = null;
@@ -54,9 +51,6 @@ public class GraphMLParser extends DefaultHandler {
 	
 	private CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
 	private CyAttributes edgeAttributes = Cytoscape.getEdgeAttributes();
-	
-	/* Edge handle list */
-	private List<String> handleList = null;
 	
 	/* node, edge, data parsing */
 	private boolean directed = false;
@@ -75,8 +69,7 @@ public class GraphMLParser extends DefaultHandler {
 		nodeList = new ArrayList<CyNode>();
 		edgeList = new ArrayList<CyEdge>();
 		nodeidMap = new HashMap();
-		nodeDatatypeMap = new HashMap();
-		edgeDatatypeMap = new HashMap();
+		datatypeMap = new HashMap();
 	}
 	
 	/********************************************************************
@@ -125,18 +118,21 @@ public class GraphMLParser extends DefaultHandler {
 		}
 		else if (qName.equals("key")) {
 			if(atts.getValue("for").equals("node")) {
-				nodeDatatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
+				datatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
 			}
 			else if (atts.getValue("for").equals("edge")) {
-				edgeDatatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
+				datatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
+			}
+			else if (atts.getValue("for").equals("all")) {
+				datatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
 			}
 		}
 		else if (qName.equals("node")) {
 			currentObjectTarget = "node";
 			currentAttributeID = atts.getValue("id");
-			CyNode node = Cytoscape.getCyNode(currentAttributeID, true);
-			nodeList.add(node);
-			nodeidMap.put(currentAttributeID, node);
+			currentNode = Cytoscape.getCyNode(currentAttributeID, true);
+			nodeList.add(currentNode);
+			nodeidMap.put(currentAttributeID, currentNode);
 		}
 		else if (qName.equals("edge")) {
 			currentObjectTarget = "edge";
@@ -144,31 +140,37 @@ public class GraphMLParser extends DefaultHandler {
 			currentEdgeTarget = atts.getValue("target");
 			CyNode sourceNode = nodeidMap.get(currentEdgeSource);
 			CyNode targetNode = nodeidMap.get(currentEdgeTarget);
+			currentEdge = Cytoscape.getCyEdge(sourceNode, targetNode, Semantics.INTERACTION, "pp", true);
 		}
 		else if (qName.equals("data")) {
-			currentAttributeName = atts.getValue("key");
+			currentAttributeKey = atts.getValue("key");
+			currentAttributeType = datatypeMap.get(currentAttributeKey);
 		}
 	}
 	
 	public void characters(char[] ch, int start, int length) {
 		currentAttributeData = new String(ch, start, length);
-		if (currentObjectTarget.equals("node")){
+		if (currentObjectTarget.equals("node")) {
 			if (currentAttributeType.equals("string")) {
-				nodeAttributes.setAttribute(currentAttributeID, currentAttributeName, currentAttributeData);	
+				nodeAttributes.setAttribute(currentAttributeID, currentAttributeKey, currentAttributeData);	
 			}
 			else if (currentAttributeType.equals("double")) {
-				nodeAttributes.setAttribute(currentAttributeID, currentAttributeName, Double.parseDouble(currentAttributeData));
+				nodeAttributes.setAttribute(currentAttributeID, currentAttributeKey, Double.parseDouble(currentAttributeData));
 			}
 		}
 		else if (currentObjectTarget.equals("edge")) {
 			if (currentAttributeType.equals("string")) {
-				
+				edgeAttributes.setAttribute(currentEdge.getIdentifier(), currentAttributeKey, currentAttributeData);
+			}
+			if (currentAttributeType.equals("double")) {
+				edgeAttributes.setAttribute(currentEdge.getIdentifier(), currentAttributeKey, currentAttributeData);
 			}
 		}
 	}
 	
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		currentObjectTarget = null;
+		currentAttributeType = null;
 	}
 	
 }
