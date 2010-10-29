@@ -11,10 +11,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.ParserAdapter;
 
 import cytoscape.CytoscapeInit;
@@ -166,24 +169,36 @@ public class GraphMLReader extends AbstractGraphReader
 					ParserAdapter pa = new ParserAdapter(sp.getParser());
 					parser = new GraphMLParser();
 
-//					pa.setContentHandler(parser);
-//					pa.setErrorHandler(parser);
-//					pa.parse(new InputSource(networkStream));
+					pa.setContentHandler(parser);
+					pa.setErrorHandler(parser);
+					pa.parse(new InputSource(networkStream));
 					
-					
-				} catch (Exception e) {
+				} catch (OutOfMemoryError oe) {
+					/*
+					 * It's not generally a good idea to catch OutOfMemoryErrors, but in
+					 * this case, where we know the culprit (a file that is too large),
+					 * we can at least try to degrade gracefully.
+					 */
+					System.gc();
+					throw new GraphMLException("Out of memory error caught! THe network being loaded is too larage for the current memory allocation. User the -Xmx flag for the java virtual machine to increase the amount of memory available, e.g. java -Xmx1G cytoscape.jar -p plugins ....");
+				} catch (ParserConfigurationException e) {
 					// TODO: handle exception
+				} catch (SAXParseException e) {
+				logger.error("GraphMLParser: fatal parsing error on line " + e.getLineNumber() + " -- '" + e.getMessage() + "'", e);
+				throw e;
 				}
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+			} finally {
+				if (networkStream != null) {
+				networkStream.close();
+				}
+			} 
+    	} finally {
+    		networkStream = null;
+    	}
     }
     
     public int[] getEdgeIndiceArray() {
-    	return edgeIdx;
+    	return parser.getEdgeIndicesArray();
     }
     
     public String getNetworkName() {
@@ -191,9 +206,7 @@ public class GraphMLReader extends AbstractGraphReader
     }
     
     public int[] getNodeIndicesArray() {
-    	return nodeIdx;
+    	return parser.getNodeIndicesArray();
     }
-    
-
 
 }

@@ -1,70 +1,31 @@
-/*
+/**
+ * A SAX Parser for GraphML data file.
  * @author kozo.nishida
+ *
  */
 
 package org.cytoscape.data.reader.graphml;
 
+import cytoscape.Cytoscape;
+import cytoscape.CyNetwork;
+import cytoscape.CyNode;
+import cytoscape.CyEdge;
+import cytoscape.data.CyAttributes;
+import cytoscape.generated.Network;
+import cytoscape.logger.CyLogger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
-import cytoscape.CyEdge;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.data.CyAttributes;
-import cytoscape.generated.Network;
-import cytoscape.logger.CyLogger;
-
-//interface Handler {
-//	public ParseState handle(String tag, Attributes atts, ParseState current) throws SAXException;
-//}
-
-enum Tokens {
-	NONE("none"),
-	ID("id"),
-	GRAPH("graph"),
-	DIRECTED("directed"),
-	UNDIRECTED("undirected"),
-	KEY("key"),
-	FOR("for"),
-	ALL("all"),
-	ATTRNAME("attr.name"),
-	ATTRTYPE("attr.type"),
-	DEFAULT("default"),
-	NODE("node"),
-	EDGE("edge"),
-	SOURCE("source"),
-	TARGET("target"),
-	DATA("data"),
-	TYPE("type");
-	
-	private String name;
-	private Tokens(String str) { name = str; }
-	public String toString() { return name; }
-};
-
-enum ObjectType {
-	INT("int"),
-	INTEGER("integer"),
-	LONG("long"),
-	FLOAT("float"),
-	DOUBLE("double"),
-	REAL("real"),
-	BOOLEAN("boolean"),
-	STRING("string"),
-	DATE("date");
-	
-	private String name;
-	private ObjectType (String s) { name = s; }
-	public String toString() { return name; }
-};
-
 public class GraphMLParser extends DefaultHandler {
-	private static CyLogger logger = CyLogger.getLogger(GraphmlParser.class);
+	
+	private static CyLogger logger = CyLogger.getLogger(GraphMLParser.class);
 	
 	private String networkName = null;
 	
@@ -73,25 +34,37 @@ public class GraphMLParser extends DefaultHandler {
 	private List<CyEdge> edgeList = null;
 	
 	/* Map of XML ID's to nodes */
-	private HashMap<String,CyNode> idMap = null;
+	private HashMap<String,CyNode> nodeidMap = null;
+	
+	/* Map of data type to nodes and edges */
+	private HashMap<String, String> nodeDatatypeMap = null;
+	private HashMap<String, String> edgeDatatypeMap = null; 
 	
 	private CyNode currentNode = null;
 	private CyEdge currentEdge = null;
 	
 	/* Attribute values */
 	private String currentAttributeID = null;
-	private CyAttributes currentAttributes = null;
-	private String objectTarget = null;
+	private String currentAttributeName = null;
+	private String currentAttributeData = null;
+	private String currentAttributeType = null;
+	private String currentEdgeSource = null;
+	private String currentEdgeTarget = null;
+	private String currentObjectTarget = null;
+	
+	private CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
+	private CyAttributes edgeAttributes = Cytoscape.getEdgeAttributes();
 	
 	/* Edge handle list */
 	private List<String> handleList = null;
+	
+	/* node, edge, data parsing */
+	private boolean directed = false;
 
 	
 	/********************************************************************
 	 * Routines to handle keys
 	 *******************************************************************/
-	
-
 	
 	/**
 	 * Main constructor for our parser. Initialize any local arrays. Note that this
@@ -101,9 +74,10 @@ public class GraphMLParser extends DefaultHandler {
 	GraphMLParser() {
 		nodeList = new ArrayList<CyNode>();
 		edgeList = new ArrayList<CyEdge>();
-		idMap = new HashMap();
-		datatypeMap = new HashMap();
-	}	
+		nodeidMap = new HashMap();
+		nodeDatatypeMap = new HashMap();
+		edgeDatatypeMap = new HashMap();
+	}
 	
 	/********************************************************************
 	 * Interface routines.  These routines are called by the GraphMLReader
@@ -135,61 +109,66 @@ public class GraphMLParser extends DefaultHandler {
 	 * the SAX parser.
 	 *******************************************************************/
 	
-	/**
-	 * startElement is callled whenever the SAX parser sees a start tag. We
-	 * user this as the way to fire our state table.
-	 * 
-	 * @param namespace the URL of the namespace (full spec)
-	 * @param localName the tag itself, stripped of all namespace stuff
-	 * @param qName the tag with the namespace prefix
-	 * @param atts the Attributes list from the tag
-	 */
-	
-	public void startElement(String namespace, String localName, String qName, Attributes atts) throws SAXException {
-		ParseState nextState = handleState(startParseTable, parseState, localName, atts);
-		
-		stateStack.push(parse)
+	public void startDocument(){
+
 	}
 	
+	public void endDocument() throws SAXException{
+		
+	}
 	
-	/********************************************************************
-	 * Element handling routines.  The following routines are the methods
-	 * called by the state mechine.
-	 *******************************************************************/
-	
-	class HandleNode implements Handler {
-		public ParseState handle(String tag, Attributes atts, ParseState current)
-				throws SAXException {
-			String id = atts.getValue("id");
-			currentNode = createUniqueNode(id);
-			return current;
+	public void startElement(String namespace, String localName, String qName, Attributes atts) throws SAXException {
+		if (qName.equals("graph")) {
+			// parse directednes default
+			String edef = atts.getValue("edgedefault");
+			directed = "directed".equalsIgnoreCase(edef);
+		}
+		else if (qName.equals("key")) {
+			if(atts.getValue("for").equals("node")) {
+				nodeDatatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
+			}
+			else if (atts.getValue("for").equals("edge")) {
+				edgeDatatypeMap.put(atts.getValue("id"), atts.getValue("attr.type"));
+			}
+		}
+		else if (qName.equals("node")) {
+			currentObjectTarget = "node";
+			currentAttributeID = atts.getValue("id");
+			CyNode node = Cytoscape.getCyNode(currentAttributeID, true);
+			nodeList.add(node);
+			nodeidMap.put(currentAttributeID, node);
+		}
+		else if (qName.equals("edge")) {
+			currentObjectTarget = "edge";
+			currentEdgeSource = atts.getValue("source");
+			currentEdgeTarget = atts.getValue("target");
+			CyNode sourceNode = nodeidMap.get(currentEdgeSource);
+			CyNode targetNode = nodeidMap.get(currentEdgeTarget);
+		}
+		else if (qName.equals("data")) {
+			currentAttributeName = atts.getValue("key");
 		}
 	}
 	
-//	class HandleNodeAttribute implements Handler {
-//		public ParseState handle(String tag, Attributes atts, ParseState current) throws SAXException {
-//			if (atts == null) {
-//				return current;
-//			}
-//			attState = current;
-//			String name = atts.get
-//		}
-//	}
+	public void characters(char[] ch, int start, int length) {
+		currentAttributeData = new String(ch, start, length);
+		if (currentObjectTarget.equals("node")){
+			if (currentAttributeType.equals("string")) {
+				nodeAttributes.setAttribute(currentAttributeID, currentAttributeName, currentAttributeData);	
+			}
+			else if (currentAttributeType.equals("double")) {
+				nodeAttributes.setAttribute(currentAttributeID, currentAttributeName, Double.parseDouble(currentAttributeData));
+			}
+		}
+		else if (currentObjectTarget.equals("edge")) {
+			if (currentAttributeType.equals("string")) {
+				
+			}
+		}
+	}
 	
-	/********************************************************************
-	 * Utility routines.  The following routines are utilities that are
-	 * used for internal purposes.
-	 *******************************************************************/	
-	
-//	private ParseState handleAttribute(Attributes atts, CyAttributes cyAtts, String id) throws SAXException {
-//		String name = atts.getValue("")
-//	}
-	
-	private CyNode createUniqueNode (String id) throws SAXException {
-		CyNode node = Cytoscape.getCyNode(id, true);
-		nodeList.add(node);
-		idMap.put(id, node);
-		return node;
+	public void endElement(String uri, String localName, String qName) throws SAXException {
+		currentObjectTarget = null;
 	}
 	
 }
