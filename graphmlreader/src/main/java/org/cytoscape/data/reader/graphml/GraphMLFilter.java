@@ -12,6 +12,7 @@ import cytoscape.util.CyFileFilter;
 public class GraphMLFilter extends CyFileFilter {
 	
 	private static final String GRAPHML_NAMESPACE = "http://graphml.graphdrawing.org/xmlns";
+	private static final String GRAPHML_TAG = "graphml";
 
 	/**
 	 * GraphML Files are Graphs.
@@ -65,7 +66,7 @@ public class GraphMLFilter extends CyFileFilter {
 			try {
 				final String header = getHeader(file);
 
-				if (header.indexOf(GRAPHML_NAMESPACE) > 0) {
+				if (header.indexOf(GRAPHML_NAMESPACE) > 0 || header.indexOf(GRAPHML_TAG) > 0) {
 					return true;
 				}
 			} catch (IOException e) {

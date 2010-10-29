@@ -21,16 +21,38 @@ public class GraphMLReaderTest {
 	}
 
 	@Test
-	public void testRead() throws Exception {
-		GraphMLReader reader1 = new GraphMLReader("src/test/resources/testGraph1.xml");
+	public void testRead1() throws Exception {
+		GraphMLReader reader = new GraphMLReader("src/test/resources/testGraph1.xml");
 		
-		assertNotNull(reader1);
+		assertNotNull(reader);
 		
-		reader1.read();
-		assertEquals(11, reader1.getNodeIndicesArray().length);
-		assertEquals(12, reader1.getEdgeIndicesArray().length);
+		reader.read();
+		assertEquals(11, reader.getNodeIndicesArray().length);
+		assertEquals(12, reader.getEdgeIndicesArray().length);
+	}
+	
+	@Test
+	public void testRead2() throws Exception {
+		GraphMLReader reader = new GraphMLReader("src/test/resources/simpleWithAttributes.xml");
+		
+		assertNotNull(reader);
+		
+		reader.read();
+		assertEquals(6, reader.getNodeIndicesArray().length);
+		assertEquals(7, reader.getEdgeIndicesArray().length);
 	}
 
+	@Test
+	public void testRead3() throws Exception {
+		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
+		
+		assertNotNull(reader);
+		
+		reader.read();
+		assertEquals(2, reader.getNodeIndicesArray().length);
+		assertEquals(1, reader.getEdgeIndicesArray().length);
+	}
+	
 	@Test
 	public void testGetNodeIndicesArray() {
 	}

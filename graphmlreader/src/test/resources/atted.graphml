@@ -1,29 +1,29 @@
 <graphml>
-<key id="label" for="all" attr.name="label" attr.type="string"/>
-<key id="target" for="node" attr.name="target" attr.type="string"/>
-<key id="TF" for="node" attr.name="TF" attr.type="string"/>
-<key id="function" for="node" attr.name="function" attr.type="string"/>
-<key id="keggsecmet" for="node" attr.name="keggsecmet" attr.type="string"/>
-<key id="keggamino" for="node" attr.name="keggamino" attr.type="string"/>
-<key id="keggstarch" for="node" attr.name="keggstarch" attr.type="string"/>
-<key id="keggphenyl" for="node" attr.name="keggphenyl" attr.type="string"/>
-<key id="cor" for="edge" attr.name="cor" attr.type="double"/>
-<graph edgedefault="undirected">
-<node id="At1g06000">
-<data key="label">At1g06000</data>
-<data key="target">O,C</data>
-<data key="function">UDP-glucoronosyl/UDP-glucosyl transferase family protein</data>
-</node>
-<node id="At1g18580">
-<data key="label">At1g18580</data>
-<data key="target">M,M</data>
-<data key="function">GAUT11 (Galacturonosyltransferase 11); polygalacturonate 4-alpha-galacturonosyltransferase</data>
-<data key="keggamino">http://www.genome.ad.jp/dbget-bin/show_pathway?ath00520+At1g18580</data>
-<data key="keggstarch">http://www.genome.ad.jp/dbget-bin/show_pathway?ath00500+At1g18580</data>
-</node>
-<edge target="At1g06000" source="At1g18580">
-<data key="label">correlation</data>
-<data key="cor">0.8</data>
-</edge>
-</graph>
+	<key id="label" for="all" attr.name="label" attr.type="string"/>
+	<key id="target" for="node" attr.name="target" attr.type="string"/>
+	<key id="TF" for="node" attr.name="TF" attr.type="string"/>
+	<key id="function" for="node" attr.name="function" attr.type="string"/>
+	<key id="keggsecmet" for="node" attr.name="keggsecmet" attr.type="string"/>
+	<key id="keggamino" for="node" attr.name="keggamino" attr.type="string"/>
+	<key id="keggstarch" for="node" attr.name="keggstarch" attr.type="string"/>
+	<key id="keggphenyl" for="node" attr.name="keggphenyl" attr.type="string"/>
+	<key id="cor" for="edge" attr.name="cor" attr.type="double"/>
+	<graph edgedefault="undirected">
+		<node id="At1g06000">
+			<data key="label">At1g06000</data>
+			<data key="target">O,C</data>
+			<data key="function">UDP-glucoronosyl/UDP-glucosyl transferase family protein</data>
+		</node>
+		<node id="At1g18580">
+			<data key="label">At1g18580</data>
+			<data key="target">M,M</data>
+			<data key="function">GAUT11 (Galacturonosyltransferase 11); polygalacturonate 4-alpha-galacturonosyltransferase</data>
+			<data key="keggamino">http://www.genome.ad.jp/dbget-bin/show_pathway?ath00520+At1g18580</data>
+			<data key="keggstarch">http://www.genome.ad.jp/dbget-bin/show_pathway?ath00500+At1g18580</data>
+		</node>
+		<edge target="At1g06000" source="At1g18580">
+			<data key="label">correlation</data>
+			<data key="cor">0.8</data>
+		</edge>
+	</graph>
 </graphml>
