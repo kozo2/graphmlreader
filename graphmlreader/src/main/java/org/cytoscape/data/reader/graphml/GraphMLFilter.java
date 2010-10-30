@@ -62,7 +62,7 @@ public class GraphMLFilter extends CyFileFilter {
 		}
 
 		if (firstPass) {
-			//  Second test:  file header must contain the KGML declaration
+			//  Second test:  file header must contain the GraphML declaration
 			try {
 				final String header = getHeader(file);
 
@@ -88,7 +88,7 @@ public class GraphMLFilter extends CyFileFilter {
 		}
 
 		if (firstPass) {
-			//  Second test:  file header must contain the KGML declaration
+			//  Second test:  file header must contain the GraphML declaration
 			try {
 				final String header = getHeader(url);
 				
