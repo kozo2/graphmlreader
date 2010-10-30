@@ -49,6 +49,7 @@ public class GraphMLParser extends DefaultHandler {
 	private String currentEdgeSource = null;
 	private String currentEdgeTarget = null;
 	private String currentObjectTarget = null;
+	private String currentQname = null;
 
 	private CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
 	private CyAttributes edgeAttributes = Cytoscape.getEdgeAttributes();
@@ -123,6 +124,7 @@ public class GraphMLParser extends DefaultHandler {
 	public void startElement(String namespace, String localName, String qName,
 			Attributes atts) throws SAXException {
 		if (qName.equals("graph")) {
+			currentQname = "graph";
 			// parse directed or undirected
 			String edef = atts.getValue("edgedefault");
 			directed = "directed".equalsIgnoreCase(edef);
@@ -130,6 +132,7 @@ public class GraphMLParser extends DefaultHandler {
 			this.networkName = atts.getValue("id");
 			
 		} else if (qName.equals("key")) {
+			currentQname = "key";
 			if (atts.getValue("for").equals(NODE)) {
 				datatypeMap
 						.put(atts.getValue("id"), atts.getValue("attr.type"));
@@ -141,6 +144,7 @@ public class GraphMLParser extends DefaultHandler {
 						.put(atts.getValue("id"), atts.getValue("attr.type"));
 			}
 		} else if (qName.equals(NODE)) {
+			currentQname = NODE;
 			// Parse node entry.
 			currentObjectTarget = NODE;
 			currentAttributeID = atts.getValue("id");
@@ -148,6 +152,7 @@ public class GraphMLParser extends DefaultHandler {
 			nodeList.add(currentNode);
 			nodeidMap.put(currentAttributeID, currentNode);
 		} else if (qName.equals(EDGE)) {
+			currentQname = EDGE;
 			// Parse edge entry
 			currentObjectTarget = EDGE;
 			currentEdgeSource = atts.getValue("source");
@@ -158,6 +163,7 @@ public class GraphMLParser extends DefaultHandler {
 					Semantics.INTERACTION, "pp", true);
 			edgeList.add(currentEdge);
 		} else if (qName.equals("data")) {
+			currentQname = "data";
 			currentAttributeKey = atts.getValue("key");
 			currentAttributeType = datatypeMap.get(currentAttributeKey);
 		}
@@ -170,9 +176,13 @@ public class GraphMLParser extends DefaultHandler {
 			if (currentObjectTarget.equals(NODE)) {
 				if (currentAttributeType != null) {
 					if (currentAttributeType.equals("string")) {
+						// debug
+						System.out.println(currentAttributeData);
 						nodeAttributes.setAttribute(currentAttributeID,
 								currentAttributeKey, currentAttributeData);
 					} else if (currentAttributeType.equals("double")) {
+						// debug
+						System.out.println(currentAttributeData);
 						nodeAttributes.setAttribute(currentAttributeID,
 								currentAttributeKey,
 								Double.parseDouble(currentAttributeData));
@@ -182,10 +192,14 @@ public class GraphMLParser extends DefaultHandler {
 			else if (currentObjectTarget.equals(EDGE)) {
 				if (currentAttributeType != null) {
 					if (currentAttributeType.equals("string")) {
+						// debug
+						System.out.println(currentAttributeData);
 						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
 								currentAttributeKey, currentAttributeData);
 					}
 					if (currentAttributeType.equals("double")) {
+						// debug
+						System.out.println(currentAttributeData);
 						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
 								currentAttributeKey, currentAttributeData);
 					}					
@@ -197,7 +211,9 @@ public class GraphMLParser extends DefaultHandler {
 
 	public void endElement(String uri, String localName, String qName)
 			throws SAXException {
-		currentObjectTarget = null;
+		if (currentQname != "data") {
+			currentObjectTarget = null;			
+		}
 		currentAttributeType = null;
 	}
 
