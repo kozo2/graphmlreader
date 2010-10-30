@@ -8,6 +8,7 @@
 	<key id="keggstarch" for="node" attr.name="keggstarch" attr.type="string"/>
 	<key id="keggphenyl" for="node" attr.name="keggphenyl" attr.type="string"/>
 	<key id="cor" for="edge" attr.name="cor" attr.type="double"/>
+	
 	<graph edgedefault="undirected">
 		<node id="At1g06000">
 			<data key="label">At1g06000</data>

@@ -181,7 +181,11 @@ public class GraphMLReader extends AbstractGraphReader {
 	}
 
 	public String getNetworkName() {
-		return parser.getNetworkName();
+		this.networkName = parser.getNetworkName();
+		if( networkName == null)
+			this.networkName = "GraphML Network";
+				
+		return networkName;
 	}
 
 	public int[] getNodeIndicesArray() {

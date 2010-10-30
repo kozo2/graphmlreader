@@ -49,6 +49,7 @@ public class GraphMLReaderTest {
 		assertNotNull(reader);
 		
 		reader.read();
+		
 		assertEquals(2, reader.getNodeIndicesArray().length);
 		assertEquals(1, reader.getEdgeIndicesArray().length);
 	}
