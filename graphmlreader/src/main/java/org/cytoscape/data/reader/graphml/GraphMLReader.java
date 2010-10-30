@@ -25,6 +25,7 @@ import cytoscape.logger.CyLogger;
 import cytoscape.task.TaskMonitor;
 import cytoscape.util.FileUtil;
 import cytoscape.util.PercentUtil;
+import cytoscape.util.URLUtil;
 
 public class GraphMLReader extends AbstractGraphReader {
 	private URL targetURL;
@@ -64,11 +65,12 @@ public class GraphMLReader extends AbstractGraphReader {
 		this.targetURL = url;
 
 		try {
-			networkStream = url.openStream();
+			networkStream = URLUtil.getBasicInputStream(targetURL);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		initialize();
 	}
 
 	/**
@@ -159,6 +161,7 @@ public class GraphMLReader extends AbstractGraphReader {
 					throw new GraphMLException(
 							"Out of memory error caught! THe network being loaded is too larage for the current memory allocation. User the -Xmx flag for the java virtual machine to increase the amount of memory available, e.g. java -Xmx1G cytoscape.jar -p plugins ....");
 				} catch (ParserConfigurationException e) {
+					System.out.println("ParserConfigurationException !!!");
 					// TODO: handle exception
 				} catch (SAXParseException e) {
 					logger.error("GraphMLParser: fatal parsing error on line "
