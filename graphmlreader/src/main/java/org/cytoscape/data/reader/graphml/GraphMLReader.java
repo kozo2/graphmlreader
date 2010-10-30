@@ -60,7 +60,7 @@ public class GraphMLReader extends AbstractGraphReader {
 
 	public GraphMLReader(final URL url) {
 		super(url.toString());
-		System.out.println("Debug: KGML URL name = " + fileName);
+		System.out.println("Debug: GraphML URL name = " + fileName);
 		this.targetURL = url;
 
 		try {
