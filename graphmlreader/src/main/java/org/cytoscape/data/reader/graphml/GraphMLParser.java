@@ -166,25 +166,33 @@ public class GraphMLParser extends DefaultHandler {
 	public void characters(char[] ch, int start, int length) {
 		currentAttributeData = new String(ch, start, length);
 		
-//		if (currentObjectTarget.equals(NODE)) {
-//			if (currentAttributeType.equals("string")) {
-//				nodeAttributes.setAttribute(currentAttributeID,
-//						currentAttributeKey, currentAttributeData);
-//			} else if (currentAttributeType.equals("double")) {
-//				nodeAttributes.setAttribute(currentAttributeID,
-//						currentAttributeKey,
-//						Double.parseDouble(currentAttributeData));
-//			}
-//		} else if (currentObjectTarget.equals(EDGE)) {
-//			if (currentAttributeType.equals("string")) {
-//				edgeAttributes.setAttribute(currentEdge.getIdentifier(),
-//						currentAttributeKey, currentAttributeData);
-//			}
-//			if (currentAttributeType.equals("double")) {
-//				edgeAttributes.setAttribute(currentEdge.getIdentifier(),
-//						currentAttributeKey, currentAttributeData);
-//			}
-//		}
+		if (currentObjectTarget != null) {
+			if (currentObjectTarget.equals(NODE)) {
+				if (currentAttributeType != null) {
+					if (currentAttributeType.equals("string")) {
+						nodeAttributes.setAttribute(currentAttributeID,
+								currentAttributeKey, currentAttributeData);
+					} else if (currentAttributeType.equals("double")) {
+						nodeAttributes.setAttribute(currentAttributeID,
+								currentAttributeKey,
+								Double.parseDouble(currentAttributeData));
+					}
+				}
+			}
+			else if (currentObjectTarget.equals(EDGE)) {
+				if (currentAttributeType != null) {
+					if (currentAttributeType.equals("string")) {
+						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
+								currentAttributeKey, currentAttributeData);
+					}
+					if (currentAttributeType.equals("double")) {
+						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
+								currentAttributeKey, currentAttributeData);
+					}					
+				}
+			}
+		}
+
 	}
 
 	public void endElement(String uri, String localName, String qName)
