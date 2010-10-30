@@ -1,6 +1,6 @@
 /**
  * A SAX Parser for GraphML data file.
- * @author kozo.nishida
+ * @author Kozo.Nishida
  *
  */
 
