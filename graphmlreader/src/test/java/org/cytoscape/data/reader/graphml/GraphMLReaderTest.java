@@ -8,9 +8,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GraphMLReaderTest {
+import cytoscape.CyNetwork;
+import cytoscape.Cytoscape;
+import cytoscape.data.CyAttributes;
 
-	
+public class GraphMLReaderTest {
 	
 	@Before
 	public void setUp() throws Exception {
@@ -45,25 +47,38 @@ public class GraphMLReaderTest {
 	@Test
 	public void testRead3() throws Exception {
 		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
-		
 		assertNotNull(reader);
-		
 		reader.read();
 		
-		assertEquals(2, reader.getNodeIndicesArray().length);
-		assertEquals(1, reader.getEdgeIndicesArray().length);
+		//CyNetwork net = Cytoscape.createNetwork("dummy");
+		CyAttributes nodeAttr = Cytoscape.getNodeAttributes();
+		CyAttributes edgeAttr = Cytoscape.getEdgeAttributes();
+		
+		assertEquals("AtbZIP52", nodeAttr.getAttribute("At1g06850", "symbol"));
+		assertEquals("bZIP", nodeAttr.getAttribute("At1g06850", "TF_family"));
+		
+		assertEquals("correlation", edgeAttr.getAttribute("At5g48880 (pp) At1g65060", "label"));
+		assertEquals(5.20, edgeAttr.getAttribute("At5g48880 (pp) At1g65060", "mr_all"));
 	}
 	
 	@Test
-	public void testGetNodeIndicesArray() {
+	public void testGetNodeIndicesArray() throws Exception{
+		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
+		assertNotNull(reader);
+		reader.read();
+		assertEquals(41, reader.getNodeIndicesArray().length);
 	}
 
 	@Test
-	public void testGraphMLReaderString() {
+	public void testGraphMLReaderString() throws Exception{
+		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
+		assertNotNull(reader);
 	}
 
 	@Test
-	public void testGraphMLReaderURL() {
+	public void testGraphMLReaderURL() throws Exception {
+		GraphMLReader reader = new GraphMLReader("http://graphmlreader.googlecode.com/svn/trunk/graphmlreader/src/test/resources/atted.graphml");
+		assertNotNull(reader);
 	}
 
 	@Test
@@ -83,11 +98,19 @@ public class GraphMLReaderTest {
 	}
 
 	@Test
-	public void testGetEdgeIndiceArray() {
+	public void testGetEdgeIndiceArray() throws Exception {
+		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
+		assertNotNull(reader);
+		reader.read();
+		assertEquals(118, reader.getEdgeIndicesArray().length);
 	}
 
 	@Test
-	public void testGetNetworkName() {
+	public void testGetNetworkName() throws Exception {
+		GraphMLReader reader = new GraphMLReader("src/test/resources/atted.graphml");
+		assertNotNull(reader);
+		reader.read();
+		assertEquals("1107222336-129-07298_NetworkDrawer", reader.getNetworkName());
 	}
 
 }
