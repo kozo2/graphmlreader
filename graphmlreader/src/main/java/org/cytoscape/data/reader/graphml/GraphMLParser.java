@@ -177,12 +177,12 @@ public class GraphMLParser extends DefaultHandler {
 				if (currentAttributeType != null) {
 					if (currentAttributeType.equals("string")) {
 						// debug
-						System.out.println(currentAttributeData);
+						//System.out.println(currentAttributeData);
 						nodeAttributes.setAttribute(currentAttributeID,
 								currentAttributeKey, currentAttributeData);
 					} else if (currentAttributeType.equals("double")) {
 						// debug
-						System.out.println(currentAttributeData);
+						//System.out.println(currentAttributeData);
 						nodeAttributes.setAttribute(currentAttributeID,
 								currentAttributeKey,
 								Double.parseDouble(currentAttributeData));
@@ -193,15 +193,15 @@ public class GraphMLParser extends DefaultHandler {
 				if (currentAttributeType != null) {
 					if (currentAttributeType.equals("string")) {
 						// debug
-						System.out.println(currentAttributeData);
+						//System.out.println(currentAttributeData);
 						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
 								currentAttributeKey, currentAttributeData);
 					}
 					if (currentAttributeType.equals("double")) {
 						// debug
-						System.out.println(currentAttributeData);
+						//System.out.println(currentAttributeData);
 						edgeAttributes.setAttribute(currentEdge.getIdentifier(),
-								currentAttributeKey, currentAttributeData);
+								currentAttributeKey, Double.parseDouble(currentAttributeData));
 					}					
 				}
 			}
