@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Properties;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -19,32 +18,26 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.ParserAdapter;
 
-import cytoscape.CytoscapeInit;
 import cytoscape.data.readers.AbstractGraphReader;
 import cytoscape.logger.CyLogger;
 import cytoscape.task.TaskMonitor;
 import cytoscape.util.FileUtil;
-import cytoscape.util.PercentUtil;
 import cytoscape.util.URLUtil;
 
 public class GraphMLReader extends AbstractGraphReader {
+	
+	private static final CyLogger logger = CyLogger.getLogger(GraphMLReader.class);
+	
 	private URL targetURL;
-
-	private int[] nodeIdx;
-	private int[] edgeIdx;
 
 	// GraphML file name to be loaded.
 	private String networkName = null;
 	private InputStream networkStream;
 	private GraphMLParser parser;
 
-	private Properties prop = CytoscapeInit.getProperties();
-	private String vsbSwitch = prop.getProperty("visualStyleBuilder");
-
 	// For exception handling
 	private TaskMonitor taskMonitor;
-	private PercentUtil percentUtil;
-	private CyLogger logger = null;
+	
 
 	/**
 	 * Constructor.<br>
@@ -61,16 +54,15 @@ public class GraphMLReader extends AbstractGraphReader {
 
 	public GraphMLReader(final URL url) {
 		super(url.toString());
-		System.out.println("Debug: GraphML URL name = " + fileName);
+		logger.debug("Debug: GraphML URL name = " + fileName);
 		this.targetURL = url;
 
 		try {
 			networkStream = URLUtil.getBasicInputStream(targetURL);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		initialize();
+		parser = new GraphMLParser();
 	}
 
 	/**
@@ -84,9 +76,8 @@ public class GraphMLReader extends AbstractGraphReader {
 	public GraphMLReader(final String fileName, final TaskMonitor monitor) {
 		super(fileName);
 		this.taskMonitor = monitor;
-		percentUtil = new PercentUtil(3);
 		networkStream = FileUtil.getInputStream(fileName, monitor);
-		initialize();
+		parser = new GraphMLParser();
 	}
 
 	/**
@@ -97,12 +88,6 @@ public class GraphMLReader extends AbstractGraphReader {
 	 */
 	public void setTaskMonitor(TaskMonitor monitor) {
 		this.taskMonitor = monitor;
-		percentUtil = new PercentUtil(3);
-	}
-
-	private void initialize() {
-		logger = CyLogger.getLogger(GraphMLReader.class);
-		parser = new GraphMLParser();
 	}
 
 	/**
@@ -138,7 +123,7 @@ public class GraphMLReader extends AbstractGraphReader {
 					 */
 					if (taskMonitor != null) {
 						taskMonitor.setPercentCompleted(-1);
-						taskMonitor.setStatus("Reading GraphML data...");
+						taskMonitor.setStatus("Loading GraphML data...");
 					}
 
 					// Get out parser
@@ -162,12 +147,12 @@ public class GraphMLReader extends AbstractGraphReader {
 							"Out of memory error caught! THe network being loaded is too larage for the current memory allocation. User the -Xmx flag for the java virtual machine to increase the amount of memory available, e.g. java -Xmx1G cytoscape.jar -p plugins ....");
 				} catch (ParserConfigurationException e) {
 					System.out.println("ParserConfigurationException !!!");
-					// TODO: handle exception
+					throw new IOException(e);
 				} catch (SAXParseException e) {
 					logger.error("GraphMLParser: fatal parsing error on line "
 							+ e.getLineNumber() + " -- '" + e.getMessage()
 							+ "'", e);
-					throw e;
+					throw new IOException("Could not parse the file.", e);
 				}
 			} finally {
 				if (networkStream != null) {
@@ -185,9 +170,9 @@ public class GraphMLReader extends AbstractGraphReader {
 
 	public String getNetworkName() {
 		this.networkName = parser.getNetworkName();
-		if( networkName == null)
-			this.networkName = "GraphML Network";
-				
+		if (networkName == null)
+			this.networkName = "GraphML Network " + System.currentTimeMillis();
+
 		return networkName;
 	}
 
