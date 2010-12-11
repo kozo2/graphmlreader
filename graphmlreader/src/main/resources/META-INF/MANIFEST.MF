@@ -1,1 +1,1 @@
-Cytoscape-Plugin:org.cytoscape.data.reader.graphml.GraphMLReaderPlugin
+Cytoscape-Plugin: org.cytoscape.data.reader.graphml.GraphMLReaderPlugin
