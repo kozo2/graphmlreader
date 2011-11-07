@@ -12,100 +12,96 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 
-
-import cytoscape.Cytoscape;
-import cytoscape.actions.LoadNetworkTask;
-import cytoscape.view.CytoscapeDesktop;
-
 public class GraphMLDragAndDropManager {
-	private static final GraphMLDragAndDropManager manager = new GraphMLDragAndDropManager();
-	
-	public static GraphMLDragAndDropManager getManager() {
-		return manager;
-	}
-	
-	private GraphMLDropTarget target = null;
-
-	public void activateTarget() {
-		if (target == null) {
-			target = new GraphMLDropTarget();
-			final CytoscapeDesktop desktop = Cytoscape.getDesktop();
-			desktop.setDropTarget(target);
-		}
-	}
-	
-	// For drag and drop
-	private static DataFlavor urlFlavor;
-	
-	static {
-		try {
-			urlFlavor = new DataFlavor(
-					"application/x-java-url; class=java.net.URL");
-		} catch (ClassNotFoundException cnfe) {
-			cnfe.printStackTrace();
-		}
-	}
-	
-	/**
-	 * D & D
-	 * 
-	 * @author Kozo.Nishida
-	 * 
-	 */
-	private class GraphMLDropTarget extends DropTarget {
-
-		private static final long serialVersionUID = -2221101934302445958L;
-		
-		public void drop(DropTargetDropEvent dtde) {
-			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-			final Transferable trans = dtde.getTransferable();
-			boolean gotData = false;
-			try {
-				if (trans.isDataFlavorSupported(urlFlavor)) {
-					URL url = (URL) trans.getTransferData(urlFlavor);
-					// Add image
-					gotData = true;
-					System.out.println("This is valid URL: " + url.toString());
-					LoadNetworkTask.loadURL(url, true);
-				} else if (trans.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-					String s = (String) trans.getTransferData(DataFlavor.stringFlavor);
-					
-					URL url = new URL(s);
-					gotData = true;
-					System.out.println("This is String.  Got DD: " + url.toString());
-					LoadNetworkTask.loadURL(url, true);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				dtde.dropComplete(gotData);
-			}
-		}
-		
-		private void test(URL url) throws IOException {
-			String header = null;
-			InputStream is = null;
-			
-			try {
-				BufferedReader br = null;
-				
-				URLConnection connection = url.openConnection();
-				is = connection.getInputStream();
-				try {
-					br = new BufferedReader(new InputStreamReader(is));
-				} finally {
-					if(br != null) {
-						br.close();
-					}
-				}
-			} finally {
-				if (is != null) {
-					is.close();
-				}
-			}
-
-		}
-		
-	}
-	
+	// TODO: FIXME!
+//	private static final GraphMLDragAndDropManager manager = new GraphMLDragAndDropManager();
+//	
+//	public static GraphMLDragAndDropManager getManager() {
+//		return manager;
+//	}
+//	
+//	private GraphMLDropTarget target = null;
+//
+//	public void activateTarget() {
+//		if (target == null) {
+//			target = new GraphMLDropTarget();
+//			final CytoscapeDesktop desktop = Cytoscape.getDesktop();
+//			desktop.setDropTarget(target);
+//		}
+//	}
+//	
+//	// For drag and drop
+//	private static DataFlavor urlFlavor;
+//	
+//	static {
+//		try {
+//			urlFlavor = new DataFlavor(
+//					"application/x-java-url; class=java.net.URL");
+//		} catch (ClassNotFoundException cnfe) {
+//			cnfe.printStackTrace();
+//		}
+//	}
+//	
+//	/**
+//	 * D & D
+//	 * 
+//	 * @author Kozo.Nishida
+//	 * 
+//	 */
+//	private class GraphMLDropTarget extends DropTarget {
+//
+//		private static final long serialVersionUID = -2221101934302445958L;
+//		
+//		public void drop(DropTargetDropEvent dtde) {
+//			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+//			final Transferable trans = dtde.getTransferable();
+//			boolean gotData = false;
+//			try {
+//				if (trans.isDataFlavorSupported(urlFlavor)) {
+//					URL url = (URL) trans.getTransferData(urlFlavor);
+//					// Add image
+//					gotData = true;
+//					System.out.println("This is valid URL: " + url.toString());
+//					LoadNetworkTask.loadURL(url, true);
+//				} else if (trans.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+//					String s = (String) trans.getTransferData(DataFlavor.stringFlavor);
+//					
+//					URL url = new URL(s);
+//					gotData = true;
+//					System.out.println("This is String.  Got DD: " + url.toString());
+//					LoadNetworkTask.loadURL(url, true);
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			} finally {
+//				dtde.dropComplete(gotData);
+//			}
+//		}
+//		
+//		private void test(URL url) throws IOException {
+//			String header = null;
+//			InputStream is = null;
+//			
+//			try {
+//				BufferedReader br = null;
+//				
+//				URLConnection connection = url.openConnection();
+//				is = connection.getInputStream();
+//				try {
+//					br = new BufferedReader(new InputStreamReader(is));
+//				} finally {
+//					if(br != null) {
+//						br.close();
+//					}
+//				}
+//			} finally {
+//				if (is != null) {
+//					is.close();
+//				}
+//			}
+//
+//		}
+//		
+//	}
+//	
 }

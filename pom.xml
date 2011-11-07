@@ -9,11 +9,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<bundle.symbolicName>org.cytoscape.graphmlreader</bundle.symbolicName>
 		<bundle.namespace>org.cytoscape.io</bundle.namespace>
+
+		<cytoscape.api.version>3.0.0-alpha8-SNAPSHOT</cytoscape.api.version>
 	</properties>
 
 	<packaging>bundle</packaging>
 
-	<version>3.0.0</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<name>GraphML Reader for Cytoscape 3</name>
 	<url>https://github.com/kozo2/graphmlreader</url>
 
@@ -43,7 +45,7 @@
 			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
 		</repository>
 	</repositories>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -59,24 +61,128 @@
 					</instructions>
 				</configuration>
 			</plugin>
+			<plugin>
+				<inherited>true</inherited>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<optimize>true</optimize>
+					<showWarnings>true</showWarnings>
+					<showDeprecation>true</showDeprecation>
+					<compilerArguments>
+						<Xmaxwarns>10000</Xmaxwarns>
+						<Xmaxerrs>10000</Xmaxerrs>
+					</compilerArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<inherited>true</inherited>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<skip>false</skip>
+					<encoding>UTF-8</encoding>
+					<locale>en</locale>
+					<javadocVersion>1.6</javadocVersion>
+					<links>
+						<link>http://download.oracle.com/javase/6/docs/api/</link>
+						<link>http://code.cytoscape.org/javadoc/</link>
+					</links>
+					<footer>GraphML Reader API</footer>
+					<header>GraphML Reader API</header>
+					<bottom>Copyright 2010 - 2011 Cytoscape Consortium. All rights
+						reserved.</bottom>
+				</configuration>
+			</plugin>
+			<plugin>
+				<inherited>true</inherited>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<inherited>false</inherited>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.2.1</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<goals>deploy</goals>
+					<!-- so that impl bundles with modules will build correctly -->
+					<preparationGoals>clean install</preparationGoals>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
 
+	<scm>
+		<url></url>
+	</scm>
+
+
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Internal Releases</name>
+			<url>http://code.cytoscape.org/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Internal Snapshots</name>
+			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+
 	<dependencies>
+		<!-- Cytoscape Core API -->
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>io-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>layout-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+		</dependency>
+
+		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.2</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
-			<groupId>cytoscape</groupId>
-			<artifactId>application</artifactId>
-			<version>2.8.0-beta4-SNAPSHOT</version>
+			<groupId>org.ops4j.pax.logging</groupId>
+			<artifactId>pax-logging-api</artifactId>
+			<version>1.5.2</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>4.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>service-api</artifactId>
+			<version>${cytoscape.api.version}</version>
 		</dependency>
 	</dependencies>
-
 </project>
-
-

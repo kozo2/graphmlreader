@@ -6,41 +6,44 @@
 
 package org.cytoscape.data.reader.graphml;
 
-import java.util.ArrayList;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.DATA;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.DIRECTED;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.EDGE;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.EDGEDEFAULT;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.GRAPH;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.ID;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.KEY;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.NODE;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.SOURCE;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.STRING;
+import static org.cytoscape.data.reader.graphml.GraphMLToken.TARGET;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNetworkFactory;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyTableEntry;
+import org.cytoscape.work.TaskMonitor;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import cytoscape.CyEdge;
-import cytoscape.CyNode;
-import cytoscape.Cytoscape;
-import cytoscape.data.CyAttributes;
-import cytoscape.data.Semantics;
-
 public class GraphMLParser extends DefaultHandler {
-
-	// private static CyLogger logger = CyLogger.getLogger(GraphMLParser.class);
 
 	private String networkName = null;
 
-	/* Internal lists of the created nodes and edges */
-	private List<CyNode> nodeList = null;
-	private List<CyEdge> edgeList = null;
-
 	/* Map of XML ID's to nodes */
-	private Map<String, CyNode> nodeidMap = null;
+	private Map<String, CyTableEntry> nodeidMap = null;
 
 	/* Map of data type to nodes or edges */
 	private Map<String, String> datatypeMap = null;
 
-	private CyNode currentNode = null;
-	private CyEdge currentEdge = null;
+	private CyTableEntry currentObject = null;
 
-	/* Attribute values */
+	// Attribute values
 	private String currentAttributeID = null;
 	private String currentAttributeKey = null;
 	private String currentAttributeData = null;
@@ -50,58 +53,24 @@ public class GraphMLParser extends DefaultHandler {
 	private String currentObjectTarget = null;
 	private String currentQname = null;
 
-	private CyAttributes nodeAttributes = Cytoscape.getNodeAttributes();
-	private CyAttributes edgeAttributes = Cytoscape.getEdgeAttributes();
+	private final TaskMonitor tm;
+	private final CyNetworkFactory networkFactory;
 
-	/* node, edge, data parsing */
-	private boolean directed = false;
-
-	/********************************************************************
-	 * Routines to handle keys
-	 *******************************************************************/
+	private boolean directed = true;
+	
+	private CyNetwork network;	
 
 	/**
 	 * Main constructor for our parser. Initialize any local arrays. Note that
 	 * this parser is designed to be as memory efficient as possible. As a
 	 * result, a minimum number of local data structures
 	 */
-	GraphMLParser() {
-		nodeList = new ArrayList<CyNode>();
-		edgeList = new ArrayList<CyEdge>();
-		nodeidMap = new HashMap<String, CyNode>();
+	GraphMLParser(final TaskMonitor tm, final CyNetworkFactory networkFactory) {
+		this.tm = tm;
+		this.networkFactory = networkFactory;
+
+		nodeidMap = new HashMap<String, CyTableEntry>();
 		datatypeMap = new HashMap<String, String>();
-	}
-
-	/********************************************************************
-	 * Interface routines. These routines are called by the GraphMLReader to get
-	 * the resulting data.
-	 *******************************************************************/
-
-	int[] getNodeIndicesArray() {
-
-		System.out.println("Got nodes: " + nodeList.size());
-
-		int[] array = new int[nodeList.size()];
-
-		for (int i = 0; i < nodeList.size(); i++) {
-			array[i] = nodeList.get(i).getRootGraphIndex();
-		}
-		return array;
-	}
-
-	int[] getEdgeIndicesArray() {
-
-		System.out.println("Got edges: " + edgeList.size());
-
-		int[] array = new int[edgeList.size()];
-		for (int i = 0; i < edgeList.size(); i++) {
-			array[i] = edgeList.get(i).getRootGraphIndex();
-		}
-		return array;
-	}
-
-	String getNetworkName() {
-		return networkName;
 	}
 
 	/********************************************************************
@@ -109,117 +78,104 @@ public class GraphMLParser extends DefaultHandler {
 	 * parser.
 	 *******************************************************************/
 
+	@Override
 	public void startDocument() {
-
+		// Create CyNetwork Object at the beginning.
+		network = networkFactory.getInstance();
 	}
 
+	@Override
 	public void endDocument() throws SAXException {
 
+		// Clear
+		nodeidMap.clear();
+		datatypeMap.clear();
+		nodeidMap = null;
+		datatypeMap = null;
 	}
 
-	public void startElement(String namespace, String localName, String qName,
-			Attributes atts) throws SAXException {
-		if (qName.equals(GraphMLToken.GRAPH.getTag())) {
-			currentQname = GraphMLToken.GRAPH.getTag();
+	@Override
+	public void startElement(String namespace, String localName, String qName, Attributes atts) throws SAXException {
+		currentQname = qName;
+		if (qName.equals(GRAPH.getTag())) {
 			// parse directed or undirected
-			String edef = atts.getValue(GraphMLToken.EDGEDEFAULT.getTag());
-			directed = GraphMLToken.DIRECTED.getTag().equalsIgnoreCase(edef);
-
-			this.networkName = atts.getValue(GraphMLToken.ID.getTag());
-
-		} else if (qName.equals(GraphMLToken.KEY.getTag())) {
-			currentQname = GraphMLToken.KEY.getTag();
-			if (atts.getValue(GraphMLToken.FOR.getTag()).equals(
-					GraphMLToken.NODE.getTag())) {
-				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()),
-						atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
-			} else if (atts.getValue(GraphMLToken.FOR.getTag()).equals(
-					GraphMLToken.EDGE.getTag())) {
-				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()),
-						atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
-			} else if (atts.getValue(GraphMLToken.FOR.getTag()).equals(
-					GraphMLToken.ALL.getTag())) {
-				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()),
-						atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
+			String edef = atts.getValue(EDGEDEFAULT.getTag());
+			directed = DIRECTED.getTag().equalsIgnoreCase(edef);
+			this.networkName = atts.getValue(ID.getTag());
+		} else if (qName.equals(KEY.getTag())) {
+			if (atts.getValue(GraphMLToken.FOR.getTag()).equals(GraphMLToken.NODE.getTag())) {
+				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()), atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
+			} else if (atts.getValue(GraphMLToken.FOR.getTag()).equals(GraphMLToken.EDGE.getTag())) {
+				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()), atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
+			} else if (atts.getValue(GraphMLToken.FOR.getTag()).equals(GraphMLToken.ALL.getTag())) {
+				datatypeMap.put(atts.getValue(GraphMLToken.ID.getTag()), atts.getValue(GraphMLToken.ATTRTYPE.getTag()));
 			}
-		} else if (qName.equals(GraphMLToken.NODE.getTag())) {
-			currentQname = GraphMLToken.NODE.getTag();
+		} else if (qName.equals(NODE.getTag())) {
 			// Parse node entry.
-			currentObjectTarget = GraphMLToken.NODE.getTag();
-			currentAttributeID = atts.getValue(GraphMLToken.ID.getTag());
-			currentNode = Cytoscape.getCyNode(currentAttributeID, true);
-			nodeList.add(currentNode);
-			nodeidMap.put(currentAttributeID, currentNode);
-		} else if (qName.equals(GraphMLToken.EDGE.getTag())) {
-			currentQname = GraphMLToken.EDGE.getTag();
+			currentObjectTarget = NODE.getTag();
+			currentAttributeID = atts.getValue(ID.getTag());
+			
+			currentObject = nodeidMap.get(currentAttributeID);
+			if (currentObject == null) {
+				currentObject = network.addNode();
+				currentObject.getCyRow().set(CyTableEntry.NAME, currentAttributeID);
+				nodeidMap.put(currentAttributeID, currentObject);
+			}
+		} else if (qName.equals(EDGE.getTag())) {
 			// Parse edge entry
-			currentObjectTarget = GraphMLToken.EDGE.getTag();
-			currentEdgeSource = atts.getValue(GraphMLToken.SOURCE.getTag());
-			currentEdgeTarget = atts.getValue(GraphMLToken.TARGET.getTag());
-			CyNode sourceNode = nodeidMap.get(currentEdgeSource);
-			CyNode targetNode = nodeidMap.get(currentEdgeTarget);
-			currentEdge = Cytoscape.getCyEdge(sourceNode, targetNode,
-					Semantics.INTERACTION, "pp", true);
-			edgeList.add(currentEdge);
-		} else if (qName.equals(GraphMLToken.DATA.getTag())) {
-			currentQname = GraphMLToken.DATA.getTag();
-			currentAttributeKey = atts.getValue(GraphMLToken.KEY.getTag());
+			currentObjectTarget = EDGE.getTag();
+			currentEdgeSource = atts.getValue(SOURCE.getTag());
+			currentEdgeTarget = atts.getValue(TARGET.getTag());
+			final CyNode sourceNode = (CyNode) nodeidMap.get(currentEdgeSource);
+			final CyNode targetNode = (CyNode) nodeidMap.get(currentEdgeTarget);
+			currentObject = network.addEdge(sourceNode, targetNode, directed);
+			currentObject.getCyRow().set(CyTableEntry.NAME, currentEdgeSource + " (-) " + currentEdgeTarget);
+			currentObject.getCyRow().set(CyEdge.INTERACTION,"-");
+		} else if (qName.equals(DATA.getTag())) {
+			currentAttributeKey = atts.getValue(KEY.getTag());
 			currentAttributeType = datatypeMap.get(currentAttributeKey);
 		}
 	}
 
+	@Override
 	public void characters(char[] ch, int start, int length) {
 		currentAttributeData = new String(ch, start, length);
 
 		if (currentObjectTarget != null) {
-			if (currentObjectTarget.equals(GraphMLToken.NODE.getTag())) {
+			if (currentObjectTarget.equals(NODE.getTag()) || currentObjectTarget.equals(EDGE.getTag())) {
 				if (currentAttributeType != null) {
-					if (currentAttributeType.equals(GraphMLToken.STRING
-							.getTag())) {
-						// debug
-						// System.out.println(currentAttributeData);
-						nodeAttributes.setAttribute(currentAttributeID,
-								currentAttributeKey, currentAttributeData);
-					} else if (currentAttributeType.equals(GraphMLToken.DOUBLE
-							.getTag())) {
-						// debug
-						// System.out.println(currentAttributeData);
-						nodeAttributes.setAttribute(currentAttributeID,
-								currentAttributeKey,
-								Double.parseDouble(currentAttributeData));
-					}
-				}
-			} else if (currentObjectTarget.equals(GraphMLToken.EDGE.getTag())) {
-				if (currentAttributeType != null) {
-					if (currentAttributeType.equals(GraphMLToken.STRING
-							.getTag())) {
-						// debug
-						// System.out.println(currentAttributeData);
-						edgeAttributes.setAttribute(
-								currentEdge.getIdentifier(),
-								currentAttributeKey, currentAttributeData);
-					}
-					if (currentAttributeType.equals(GraphMLToken.DOUBLE
-							.getTag())) {
-						// debug
-						// System.out.println(currentAttributeData);
-						edgeAttributes.setAttribute(
-								currentEdge.getIdentifier(),
-								currentAttributeKey,
-								Double.parseDouble(currentAttributeData));
-					}
+					if (currentAttributeType.equals(STRING.getTag()))
+						this.currentObject.getCyRow().set(currentAttributeKey, currentAttributeData);
+					else if (currentAttributeType.equals(GraphMLToken.DOUBLE.getTag()))
+						this.currentObject.getCyRow().set(currentAttributeKey, Double.parseDouble(currentAttributeData));
 				}
 			}
 		}
-
+//			else if (currentObjectTarget.equals(GraphMLToken.EDGE.getTag())) {
+//				if (currentAttributeType != null) {
+//					if (currentAttributeType.equals(GraphMLToken.STRING.getTag())) {
+//						// debug
+//						// System.out.println(currentAttributeData);
+//						edgeAttributes.setAttribute(currentObject.getIdentifier(), currentAttributeKey,
+//								currentAttributeData);
+//					}
+//					if (currentAttributeType.equals(GraphMLToken.DOUBLE.getTag())) {
+//						// debug
+//						// System.out.println(currentAttributeData);
+//						edgeAttributes.setAttribute(currentObject.getIdentifier(), currentAttributeKey,
+//								Double.parseDouble(currentAttributeData));
+//					}
+//				}
+//			}
 	}
 
-	public void endElement(String uri, String localName, String qName)
-			throws SAXException {
-		if (currentQname != GraphMLToken.DATA.getTag()) {
+	@Override
+	public void endElement(String uri, String localName, String qName) throws SAXException {
+		if (currentQname != DATA.getTag())
 			currentObjectTarget = null;
-		}
-		currentAttributeType = null;
+//		currentAttributeType = null;
+//		currentNode = null;
+//		currentEdge = null;
 	}
 
 }
