@@ -2,7 +2,7 @@
  * @author kozo.nishida
  */
 
-package org.cytoscape.data.reader.graphml;
+package org.cytoscape.io.internal.read.graphml;
 
 import java.io.InputStream;
 import java.net.URL;

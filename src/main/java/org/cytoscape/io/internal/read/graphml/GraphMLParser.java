@@ -4,19 +4,19 @@
  *
  */
 
-package org.cytoscape.data.reader.graphml;
+package org.cytoscape.io.internal.read.graphml;
 
-import static org.cytoscape.data.reader.graphml.GraphMLToken.DATA;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.DIRECTED;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.EDGE;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.EDGEDEFAULT;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.GRAPH;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.ID;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.KEY;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.NODE;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.SOURCE;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.STRING;
-import static org.cytoscape.data.reader.graphml.GraphMLToken.TARGET;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.DATA;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.DIRECTED;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.EDGE;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.EDGEDEFAULT;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.GRAPH;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.ID;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.KEY;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.NODE;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.SOURCE;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.STRING;
+import static org.cytoscape.io.internal.read.graphml.GraphMLToken.TARGET;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package org.cytoscape.data.reader.graphml.util;
+package org.cytoscape.io.internal.read.graphml.util;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;

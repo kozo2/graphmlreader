@@ -1,4 +1,4 @@
-package org.cytoscape.data.writer.graphml;
+package org.cytoscape.io.internal.write.graphml;
 
 import java.io.IOException;
 import java.io.Writer;

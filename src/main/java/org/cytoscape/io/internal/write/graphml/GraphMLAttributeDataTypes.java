@@ -1,4 +1,4 @@
-package org.cytoscape.data.writer.graphml;
+package org.cytoscape.io.internal.write.graphml;
 
 public enum GraphMLAttributeDataTypes {
 	BOOLEAN("boolean", Boolean.class), INTEGER("int", Integer.class), LONG(
