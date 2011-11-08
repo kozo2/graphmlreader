@@ -19,6 +19,8 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.Task;
+import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +30,6 @@ import org.xml.sax.helpers.ParserAdapter;
 public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphMLReader.class);
-
-	private CyNetwork[] cyNetworks;
 
 	private VisualStyle[] visualstyles;
 	private InputStream inputStream;
@@ -43,6 +43,10 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 
 	// GraphML file name to be loaded.
 	private String networkName;
+	
+	private GraphMLParser parser;
+	
+	private TaskMonitor taskMonitor;
 
 	public GraphMLReader(InputStream inputStream, final CyLayoutAlgorithmManager layouts, final CyNetworkFactory cyNetworkFactory, final CyNetworkViewFactory cyNetworkViewFactory) {
 		if (inputStream == null)
@@ -60,17 +64,21 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 
 	@Override
 	public CyNetwork[] getCyNetworks() {
-		return cyNetworks;
+		if(parser == null)
+			throw new IllegalStateException("Parser is not initialized.");
+		
+		return parser.getCyNetworks();
 	}
 
 	@Override
 	public void run(final TaskMonitor taskMonitor) throws Exception {
+		this.taskMonitor = taskMonitor;
 		try {
 			final SAXParserFactory spf = SAXParserFactory.newInstance();
 			final SAXParser sp = spf.newSAXParser();
 			final ParserAdapter pa = new ParserAdapter(sp.getParser());
 			
-			final GraphMLParser parser = new GraphMLParser(taskMonitor, cyNetworkFactory);
+			parser = new GraphMLParser(taskMonitor, cyNetworkFactory);
 
 			pa.setContentHandler(parser);
 			pa.setErrorHandler(parser);
@@ -86,6 +94,20 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 
 	@Override
 	public CyNetworkView buildCyNetworkView(CyNetwork network) {
-		return null;
+		final CyNetworkView view = cyNetworkViewFactory.getNetworkView(network);
+
+		final CyLayoutAlgorithm layout = layouts.getDefaultLayout();
+		layout.setNetworkView(view);
+		
+		// Force to run this task here to avoid concurrency problem.
+		TaskIterator itr = layout.getTaskIterator();
+		Task nextTask = itr.next();
+		try {
+			nextTask.run(taskMonitor);
+		} catch (Exception e) {
+			throw new RuntimeException("Could not finish layout", e);
+		}
+
+		return view;
 	}
 }
