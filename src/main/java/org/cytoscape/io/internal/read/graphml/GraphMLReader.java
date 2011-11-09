@@ -13,6 +13,7 @@ import javax.xml.parsers.SAXParserFactory;
 import org.cytoscape.io.read.CyNetworkReader;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkFactory;
+import org.cytoscape.model.subnetwork.CyRootNetworkFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkView;
@@ -45,10 +46,12 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 	private String networkName;
 	
 	private GraphMLParser parser;
-	
 	private TaskMonitor taskMonitor;
 
-	public GraphMLReader(InputStream inputStream, final CyLayoutAlgorithmManager layouts, final CyNetworkFactory cyNetworkFactory, final CyNetworkViewFactory cyNetworkViewFactory) {
+	private final CyRootNetworkFactory cyRootNetworkFactory;
+
+	public GraphMLReader(InputStream inputStream, final CyLayoutAlgorithmManager layouts,
+			final CyNetworkFactory cyNetworkFactory, final CyNetworkViewFactory cyNetworkViewFactory, final CyRootNetworkFactory cyRootNetworkFactory) {
 		if (inputStream == null)
 			throw new NullPointerException("Input stream is null");
 		if (cyNetworkViewFactory == null)
@@ -59,6 +62,7 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 		this.inputStream = inputStream;
 		this.cyNetworkViewFactory = cyNetworkViewFactory;
 		this.cyNetworkFactory = cyNetworkFactory;
+		this.cyRootNetworkFactory = cyRootNetworkFactory;
 		this.layouts = layouts;
 	}
 
@@ -78,7 +82,7 @@ public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 			final SAXParser sp = spf.newSAXParser();
 			final ParserAdapter pa = new ParserAdapter(sp.getParser());
 			
-			parser = new GraphMLParser(taskMonitor, cyNetworkFactory);
+			parser = new GraphMLParser(taskMonitor, cyNetworkFactory, cyRootNetworkFactory);
 
 			pa.setContentHandler(parser);
 			pa.setErrorHandler(parser);
