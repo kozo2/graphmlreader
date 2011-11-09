@@ -30,8 +30,6 @@ import org.xml.sax.helpers.ParserAdapter;
 
 public class GraphMLReader extends AbstractTask implements CyNetworkReader {
 
-	private static final Logger logger = LoggerFactory.getLogger(GraphMLReader.class);
-
 	private VisualStyle[] visualstyles;
 	private InputStream inputStream;
 

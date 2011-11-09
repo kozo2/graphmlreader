@@ -22,12 +22,9 @@ import static org.cytoscape.io.internal.read.graphml.GraphMLToken.TARGET;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
-import java.util.logging.Logger;
 
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyEdge;
@@ -38,11 +35,15 @@ import org.cytoscape.model.CyTableEntry;
 import org.cytoscape.model.subnetwork.CyRootNetworkFactory;
 import org.cytoscape.model.subnetwork.CySubNetwork;
 import org.cytoscape.work.TaskMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class GraphMLParser extends DefaultHandler {
+	
+	private static final Logger logger = LoggerFactory.getLogger(GraphMLParser.class);
 
 	// Map of data type to nodes or edges
 	private Map<String, String> datatypeMap;
@@ -118,8 +119,6 @@ public class GraphMLParser extends DefaultHandler {
 
 	@Override
 	public void startElement(String namespace, String localName, String qName, Attributes atts) throws SAXException {
-		System.out.println("Start: " + qName + " = " + atts.getValue(ID.getTag()));
-
 		if (qName.equals(GRAPH.getTag()))
 			createGraph(atts);
 		else if (qName.equals(KEY.getTag())) {
@@ -138,7 +137,6 @@ public class GraphMLParser extends DefaultHandler {
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
-		System.out.println("End: " + qName);
 		lastTag = qName;
 
 		if (qName != DATA.getTag())
@@ -148,7 +146,6 @@ public class GraphMLParser extends DefaultHandler {
 		if (networkStack.size() > 1 && qName == GRAPH.getTag()) {
 			networkStack.pop();
 			currentNetwork = networkStack.peek();
-			System.out.println("This is nested.  Cure network switched to " + currentNetwork.getNodeCount() );
 		}
 	}
 
@@ -160,7 +157,6 @@ public class GraphMLParser extends DefaultHandler {
 			final CyNetwork parentNetwork = networkStack.peek();
 			currentNetwork = rootNetworkFactory.convert(parentNetwork).addSubNetwork();
 			if(lastTag != null && lastTag.equals(NODE.getTag())) {
-				System.out.println("Removing node: ");
 				Collection<CyNode> toBeRemoved = new ArrayList<CyNode>();
 				toBeRemoved.add(lastNode);
 				
@@ -185,16 +181,13 @@ public class GraphMLParser extends DefaultHandler {
 			final CyNetwork rootNetwork = networkStack.get(0);
 			currentObject = nodeid2CyNodeMap.get(currentAttributeID);
 			if (currentObject == null) {
-				System.out.println("** Adding to root: " + currentAttributeID);
 				currentObject = rootNetwork.addNode();
 				currentObject.getCyRow().set(CyTableEntry.NAME, currentAttributeID);
 				nodeid2CyNodeMap.put(currentAttributeID, currentObject);
 			}
 
-			System.out.println("Nested found: " + currentAttributeID);
 			for (CyNetwork network : networkStack) {
 				if (network != rootNetwork) {
-					System.out.println("** Adding to others: " + currentAttributeID);
 					((CySubNetwork) network).addNode((CyNode) currentObject);
 				}
 			}
@@ -219,11 +212,6 @@ public class GraphMLParser extends DefaultHandler {
 		final CyNode sourceNode = (CyNode) nodeid2CyNodeMap.get(currentEdgeSourceName);
 		final CyNode targetNode = (CyNode) nodeid2CyNodeMap.get(currentEdgeTargetName);
 		
-		System.out.println("* Network has = " + currentNetwork.getNodeCount());
-		System.out.println("* Source = " + sourceNode);
-		System.out.println("* Target = " + targetNode);
-		
-		
 		if (networkStack.size() > 1) {
 			final CyNetwork rootNetwork = networkStack.get(0);
 			currentObject = rootNetwork.addEdge(sourceNode, targetNode, directed);
@@ -232,7 +220,6 @@ public class GraphMLParser extends DefaultHandler {
 
 			for (CyNetwork network : networkStack) {
 				if (network != rootNetwork) {
-					System.out.println("** Adding to others: " + currentAttributeID);
 					((CySubNetwork) network).addEdge((CyEdge) currentObject);
 				}
 			}
@@ -242,7 +229,7 @@ public class GraphMLParser extends DefaultHandler {
 				currentObject.getCyRow().set(CyTableEntry.NAME, currentEdgeSourceName + " (-) " + currentEdgeTargetName);
 				currentObject.getCyRow().set(CyEdge.INTERACTION, "-");
 			} catch (Exception e) {
-				System.out.println("Ignoring edge: " + currentEdgeSourceName + " (-) " + currentEdgeTargetName);
+				logger.warn("Edge entry ignored: " + currentEdgeSourceName + " (-) " + currentEdgeTargetName, e);
 			}
 		}
 
